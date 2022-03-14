@@ -1,8 +1,3 @@
-/*
-CSC3916 HW2
-File: Server.js
-Description: Web API scaffolding for Movie API
- */
 
 var express = require('express');
 var bodyParser = require('body-parser');
@@ -12,6 +7,7 @@ var authJwtController = require('./auth_jwt');
 var jwt = require('jsonwebtoken');
 var cors = require('cors');
 var User = require('./Users');
+var Movie = require("./Movies");
 
 var app = express();
 app.use(cors());
@@ -22,8 +18,11 @@ app.use(passport.initialize());
 
 var router = express.Router();
 
-function getJSONObjectForMovieRequirement(req) {
+function getJSONObjectForMovieRequirement(req, msg) {
     var json = {
+        title: title,
+        year_released: year,
+        message: msg,
         headers: "No headers",
         key: process.env.UNIQUE_KEY,
         body: "No body"
@@ -84,6 +83,56 @@ router.post('/signin', function (req, res) {
         })
     })
 });
+
+router.route('/movies')
+    .get(function (req, res) {
+        console.log(req.body);
+        res = res.status(200);
+        // if (req.get('Content-Type')) {
+        //     res = res.type(req.get('Content-Type'));
+        // }
+        if (!req.body.title) {
+            res.json({success: false, message: 'Request must contain a movie title.'})
+        }
+
+        Movie.find({ title: req.body.title }).exec(function (err, movie) {
+            if (err) {
+                res.send(err);
+            }
+
+            // var o = getJSONObjectForMovieRequirement(req, 'GET movies');
+            res.json(movie);
+        })
+    })
+    .post(function (req, res) {
+        console.log(req.body);
+        res = res.status(200);
+        if (req.get('Content-Type')) {
+            res = res.type(req.get('Content-Type'));
+        }
+        var o = getJSONObjectForMovieRequirement(req, 'movie saved');
+        res.json(o)
+    })
+    .delete(authController.isAuthenticated, function(req, res) {
+            console.log(req.body);
+            res = res.status(200);
+            if (req.get('Content-Type')) {
+                res = res.type(req.get('Content-Type'));
+            }
+            var o = getJSONObjectForMovieRequirement(req, 'movie deleted');
+            res.json(o);
+        }
+    )
+    .put(authJwtController.isAuthenticated, function(req, res) {
+            console.log(req.body);
+            res = res.status(200);
+            if (req.get('Content-Type')) {
+                res = res.type(req.get('Content-Type'));
+            }
+            var o = getJSONObjectForMovieRequirement(req, 'movie updated');
+            res.json(o);
+        }
+    );
 
 app.use('/', router);
 app.listen(process.env.PORT || 8080);
