@@ -84,6 +84,30 @@ router.post('/signin', function (req, res) {
     })
 });
 
+router.route('/movies/:title')
+    .get(function (req, res) {
+        console.log(req.body);
+        res = res.status(200);
+        // let movieTitle = req.params.title;
+
+        if (req.get('Content-Type')) {
+            res = res.type(req.get('Content-Type'));
+        }
+
+        // if (!'title') {
+        //     res.json({success: false, message: 'Request must contain a movie title.'})
+        // }
+
+        Movie.find({ title: req.params.title }).exec(function (err, movie) {
+            if (err) {
+                res.send(err);
+            }
+
+            // var o = getJSONObjectForMovieRequirement(req, 'GET movies');
+            res.json(movie);
+        })
+    })
+
 router.route('/movies')
     .get(function (req, res) {
         console.log(req.body);
@@ -93,11 +117,11 @@ router.route('/movies')
             res = res.type(req.get('Content-Type'));
         }
 
-        if (!req.body.title) {
-            res.json({success: false, message: 'Request must contain a movie title.'})
-        }
+        // if (!req.body.title) {
+        //     res.json({success: false, message: 'Request must contain a movie title.'})
+        // }
 
-        Movie.find({ title: req.body.title }).exec(function (err, movie) {
+        Movie.find().exec(function (err, movie) {
             if (err) {
                 res.send(err);
             }
@@ -123,7 +147,7 @@ router.route('/movies')
         movieNew.save(function(err){
             if (err) {
                 if (err.code == 11000)
-                    return res.json({ success: false, message: 'A movie with that username already exists.'});
+                    return res.json({ success: false, message: 'A movie with that title already exists.'});
                 else
                     return res.json(err);
             }
