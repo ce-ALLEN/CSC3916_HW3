@@ -20,8 +20,8 @@ var router = express.Router();
 
 function getJSONObjectForMovieRequirement(req, msg) {
     var json = {
-        title: title,
-        year_released: year,
+        // title: title,
+        // year_released: year,
         message: msg,
         headers: "No headers",
         key: process.env.UNIQUE_KEY,
