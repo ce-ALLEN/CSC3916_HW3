@@ -88,9 +88,11 @@ router.route('/movies')
     .get(function (req, res) {
         console.log(req.body);
         res = res.status(200);
-        // if (req.get('Content-Type')) {
-        //     res = res.type(req.get('Content-Type'));
-        // }
+
+        if (req.get('Content-Type')) {
+            res = res.type(req.get('Content-Type'));
+        }
+
         if (!req.body.title) {
             res.json({success: false, message: 'Request must contain a movie title.'})
         }
@@ -107,11 +109,29 @@ router.route('/movies')
     .post(function (req, res) {
         console.log(req.body);
         res = res.status(200);
+
+        let movieNew = new Movie();
+        movieNew.title = req.body.title;
+        movieNew.yearReleased = req.body.yearReleased;
+        movieNew.genre = req.body.genre;
+        movieNew.actors = req.body.actors;
+
         if (req.get('Content-Type')) {
             res = res.type(req.get('Content-Type'));
         }
-        var o = getJSONObjectForMovieRequirement(req, 'movie saved');
-        res.json(o)
+
+        movieNew.save(function(err){
+            if (err) {
+                if (err.code == 11000)
+                    return res.json({ success: false, message: 'A movie with that username already exists.'});
+                else
+                    return res.json(err);
+            }
+            else {
+                var o = getJSONObjectForMovieRequirement(req, 'movie saved');
+                res.json(o)
+            }
+        });
     })
     .delete(authController.isAuthenticated, function(req, res) {
             console.log(req.body);
