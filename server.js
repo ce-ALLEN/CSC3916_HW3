@@ -2,7 +2,6 @@
 var express = require('express');
 var bodyParser = require('body-parser');
 var passport = require('passport');
-var authController = require('./auth');
 var authJwtController = require('./auth_jwt');
 var jwt = require('jsonwebtoken');
 var cors = require('cors');
@@ -85,7 +84,7 @@ router.post('/signin', function (req, res) {
 });
 
 router.route('/movies/:title')
-    .get(function (req, res) {
+    .get(authJwtController.isAuthenticated, function (req, res) {
         console.log(req.body);
         res = res.status(200);
         // let movieTitle = req.params.title;
@@ -107,9 +106,35 @@ router.route('/movies/:title')
             res.json(movie);
         })
     })
+    .delete(authJwtController.isAuthenticated, function(req, res) {
+            console.log(req.body);
+            res = res.status(200);
+            if (req.get('Content-Type')) {
+                res = res.type(req.get('Content-Type'));
+            }
+
+        Movie.remove({ title: req.params.title }).exec(function (err) {
+            if (err) {
+                res.send(err);
+            }
+
+            var o = getJSONObjectForMovieRequirement(req, 'movie deleted');
+            res.json(o);
+        })
+    })
+    .put(authJwtController.isAuthenticated, function(req, res) {
+            console.log(req.body);
+            res = res.status(200);
+            if (req.get('Content-Type')) {
+                res = res.type(req.get('Content-Type'));
+            }
+            var o = getJSONObjectForMovieRequirement(req, 'movie updated');
+            res.json(o);
+        }
+    );
 
 router.route('/movies')
-    .get(function (req, res) {
+    .get(authJwtController.isAuthenticated, function (req, res) {
         console.log(req.body);
         res = res.status(200);
 
@@ -121,16 +146,16 @@ router.route('/movies')
         //     res.json({success: false, message: 'Request must contain a movie title.'})
         // }
 
-        Movie.find().exec(function (err, movie) {
+        Movie.find().exec(function (err, movies) {
             if (err) {
                 res.send(err);
             }
 
             // var o = getJSONObjectForMovieRequirement(req, 'GET movies');
-            res.json(movie);
+            res.json(movies);
         })
     })
-    .post(function (req, res) {
+    .post(authJwtController.isAuthenticated, function (req, res) {
         console.log(req.body);
         res = res.status(200);
 
@@ -157,26 +182,7 @@ router.route('/movies')
             }
         });
     })
-    .delete(authController.isAuthenticated, function(req, res) {
-            console.log(req.body);
-            res = res.status(200);
-            if (req.get('Content-Type')) {
-                res = res.type(req.get('Content-Type'));
-            }
-            var o = getJSONObjectForMovieRequirement(req, 'movie deleted');
-            res.json(o);
-        }
-    )
-    .put(authJwtController.isAuthenticated, function(req, res) {
-            console.log(req.body);
-            res = res.status(200);
-            if (req.get('Content-Type')) {
-                res = res.type(req.get('Content-Type'));
-            }
-            var o = getJSONObjectForMovieRequirement(req, 'movie updated');
-            res.json(o);
-        }
-    );
+
 
 app.use('/', router);
 app.listen(process.env.PORT || 8080);
